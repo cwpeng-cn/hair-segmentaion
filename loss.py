@@ -16,6 +16,8 @@ class OhemCELoss(nn.Module):
 
     def forward(self, logits, labels):
         loss = self.criteria(logits, labels).view(-1)
+        print(labels.shape)
+        print(loss.shape)
         loss, _ = torch.sort(loss, descending=True)
         if loss[self.n_min] > self.thresh:
             loss = loss[loss > self.thresh]
