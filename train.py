@@ -156,7 +156,7 @@ def train():
             st = ed
 
         if dist.get_rank() == 0:
-            if (it + 1) % 5000 == 0:
+            if (it + 1) % 500 == 0:
                 state = net.module.state_dict() if hasattr(net, 'module') else net.state_dict()
                 torch.save(state, './res/cp/{}_iter.pth'.format(it))
                 evaluate(dspth='./data/HAIR/img_dir/val', cp='{}_iter.pth'.format(it),)
