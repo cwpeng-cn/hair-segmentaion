@@ -1,28 +1,23 @@
 # -*- encoding: utf-8 -*-
 
-import cv2
-import numpy as np
-from logger import setup_logger
-from model import BiSeNet
-from hair_dataset import HairMask
-from loss import OhemCELoss
-from evaluate import evaluate
-from optimizer import Optimizer
-
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-import torch.nn.functional as F
-import torch.distributed as dist
-
 import os
-import os.path as osp
-import logging
 import time
+import torch
+import logging
 import datetime
 import argparse
+import os.path as osp
+import torch.nn as nn
+from model import BiSeNet
+from loss import OhemCELoss
+from evaluate import evaluate
+from logger import setup_logger
+from optimizer import Optimizer
+import torch.distributed as dist
+from hair_dataset import HairMask
+from torch.utils.data import DataLoader
 
-respth = './res'
+respth = './res/cp'
 if not osp.exists(respth):
     os.makedirs(respth)
 logger = logging.getLogger()
@@ -57,15 +52,15 @@ def train():
     crop_size = [448, 448]
     data_root = './data/HAIR'
 
-    ds = HairMask(data_root, crop_size=crop_size, mode='train')
-    sampler = torch.utils.data.distributed.DistributedSampler(ds)
-    dl = DataLoader(ds,
-                    batch_size=n_img_per_gpu,
-                    shuffle=False,
-                    sampler=sampler,
-                    num_workers=n_workers,
-                    pin_memory=True,
-                    drop_last=True)
+    dataset = HairMask(data_root, crop_size=crop_size, mode='train')
+    sampler = torch.utils.data.distributed.DistributedSampler(dataset)
+    data_loader = DataLoader(dataset,
+                             batch_size=n_img_per_gpu,
+                             shuffle=False,
+                             sampler=sampler,
+                             num_workers=n_workers,
+                             pin_memory=True,
+                             drop_last=True)
 
     # model
     net = BiSeNet(n_classes=n_classes)
@@ -105,34 +100,36 @@ def train():
     msg_iter = 50
     loss_avg = []
     st = glob_st = time.time()
-    diter = iter(dl)
+    data_iter = iter(data_loader)
     epoch = 0
 
     for it in range(max_iter):
         try:
-            im, lb = next(diter)
+            im, label = next(data_iter)
             if not im.size()[0] == n_img_per_gpu:
                 raise StopIteration
         except StopIteration:
             epoch += 1
             sampler.set_epoch(epoch)
-            diter = iter(dl)
-            im, lb = next(diter)
+            data_iter = iter(data_loader)
+            im, label = next(data_iter)
+
         im = im.cuda()
-        lb = lb.cuda()
-        lb = torch.squeeze(lb, 1)
+        label = label.cuda()
+        label = torch.squeeze(label, 1)
 
         optim.zero_grad()
         out, out16, out32 = net(im)
-        lossp = LossP(out, lb)
-        loss2 = Loss2(out16, lb)
-        loss3 = Loss3(out32, lb)
+        lossp = LossP(out, label)
+        loss2 = Loss2(out16, label)
+        loss3 = Loss3(out32, label)
         loss = lossp + loss2 + loss3
-        print(loss)
+
         loss.backward()
         optim.step()
 
         loss_avg.append(loss.item())
+
         if (it + 1) % msg_iter == 0:
             loss_avg = sum(loss_avg) / len(loss_avg)
             lr = optim.lr
@@ -161,9 +158,8 @@ def train():
         if dist.get_rank() == 0:
             if (it + 1) % 5000 == 0:
                 state = net.module.state_dict() if hasattr(net, 'module') else net.state_dict()
-                if dist.get_rank() == 0:
-                    torch.save(state, './res/cp/{}_iter.pth'.format(it))
-                evaluate(dspth='./data/HAIR/img_dir/val', cp='{}_iter.pth'.format(it))
+                torch.save(state, './res/cp/{}_iter.pth'.format(it))
+                evaluate(dspth='./data/HAIR/img_dir/val', cp='{}_iter.pth'.format(it),)
 
     #  dump the final model
     save_pth = osp.join(respth, 'model_final_diss.pth')

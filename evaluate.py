@@ -40,17 +40,14 @@ def vis_parsing_maps(im, parsing_anno, stride, save_im=False, save_path='vis_res
         vis_parsing_anno_color[index[0], index[1], :] = part_colors[pi]
 
     vis_parsing_anno_color = vis_parsing_anno_color.astype(np.uint8)
-    # print(vis_parsing_anno_color.shape, vis_im.shape)
     vis_im = cv2.addWeighted(cv2.cvtColor(vis_im, cv2.COLOR_RGB2BGR), 0.4, vis_parsing_anno_color, 0.6, 0)
 
     # Save result or not
     if save_im:
         cv2.imwrite(save_path, vis_im, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
 
-    # return vis_im
 
-
-def evaluate(respth='./res/test_res', dspth='./data', cp='model_final_diss.pth'):
+def evaluate(respth, dspth='./data', cp='model_final_diss.pth'):
     if not os.path.exists(respth):
         os.makedirs(respth)
 
@@ -65,6 +62,7 @@ def evaluate(respth='./res/test_res', dspth='./data', cp='model_final_diss.pth')
         transforms.ToTensor(),
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
+
     with torch.no_grad():
         for image_path in os.listdir(dspth):
             img = Image.open(osp.join(dspth, image_path))
