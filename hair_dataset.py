@@ -47,14 +47,14 @@ class HairMask(Dataset):
     def __getitem__(self, idx):
         img_path, ann_path = self.info[idx]
         img = Image.open(img_path)
-        label = Image.open(ann_path).convert('P')
+        label = Image.open(ann_path).convert('L')
+
         if self.mode == 'train':
             im_lb = dict(im=img, lb=label)
             im_lb = self.trans_train(im_lb)
             img, label = im_lb['im'], im_lb['lb']
         img = self.to_tensor(img)
-        label = np.array(label).astype(np.int64)[np.newaxis, :]
-        label[label != 0] = 1
+        label = np.array(label)[np.newaxis, :]
         return img, label
 
     def __len__(self):
