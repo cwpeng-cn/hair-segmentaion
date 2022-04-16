@@ -159,7 +159,7 @@ def train():
             if (it + 1) % 500 == 0:
                 state = net.module.state_dict() if hasattr(net, 'module') else net.state_dict()
                 torch.save(state, './res/cp/{}_iter.pth'.format(it))
-                evaluate(dspth='./data/HAIR/img_dir/val', cp='{}_iter.pth'.format(it),)
+                evaluate(respth="./res", dspth='./data/HAIR/img_dir/val', cp='{}_iter.pth'.format(it), )
 
     #  dump the final model
     save_pth = osp.join(respth, 'model_final_diss.pth')
