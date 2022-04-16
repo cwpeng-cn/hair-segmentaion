@@ -54,10 +54,10 @@ def train():
     n_classes = 2
     n_img_per_gpu = 16
     n_workers = 8
-    cropsize = [448, 448]
+    crop_size = [448, 448]
     data_root = './data/HAIR'
 
-    ds = HairMask(data_root, cropsize=cropsize, mode='train')
+    ds = HairMask(data_root, crop_size=crop_size, mode='train')
     sampler = torch.utils.data.distributed.DistributedSampler(ds)
     dl = DataLoader(ds,
                     batch_size=n_img_per_gpu,
@@ -68,7 +68,6 @@ def train():
                     drop_last=True)
 
     # model
-    ignore_idx = -100
     net = BiSeNet(n_classes=n_classes)
     net.cuda()
     net.train()
@@ -76,11 +75,12 @@ def train():
                                               device_ids=[args.local_rank, ],
                                               output_device=args.local_rank
                                               )
+
     score_thres = 0.7
     n_min = n_img_per_gpu * cropsize[0] * cropsize[1] // 16
-    LossP = OhemCELoss(thresh=score_thres, n_min=n_min, ignore_lb=ignore_idx)
-    Loss2 = OhemCELoss(thresh=score_thres, n_min=n_min, ignore_lb=ignore_idx)
-    Loss3 = OhemCELoss(thresh=score_thres, n_min=n_min, ignore_lb=ignore_idx)
+    LossP = OhemCELoss(thresh=score_thres, n_min=n_min)
+    Loss2 = OhemCELoss(thresh=score_thres, n_min=n_min)
+    Loss3 = OhemCELoss(thresh=score_thres, n_min=n_min)
 
     ## optimizer
     momentum = 0.9
@@ -90,6 +90,7 @@ def train():
     power = 0.9
     warmup_steps = 1000
     warmup_start_lr = 1e-5
+
     optim = Optimizer(
         model=net.module,
         lr0=lr_start,
@@ -106,6 +107,7 @@ def train():
     st = glob_st = time.time()
     diter = iter(dl)
     epoch = 0
+
     for it in range(max_iter):
         try:
             im, lb = next(diter)
@@ -154,6 +156,7 @@ def train():
             logger.info(msg)
             loss_avg = []
             st = ed
+
         if dist.get_rank() == 0:
             if (it + 1) % 5000 == 0:
                 state = net.module.state_dict() if hasattr(net, 'module') else net.state_dict()
