@@ -77,7 +77,7 @@ def train():
                                               )
 
     score_thres = 0.7
-    n_min = n_img_per_gpu * cropsize[0] * cropsize[1] // 16
+    n_min = n_img_per_gpu * crop_size[0] * crop_size[1] // 16
     LossP = OhemCELoss(thresh=score_thres, n_min=n_min)
     Loss2 = OhemCELoss(thresh=score_thres, n_min=n_min)
     Loss3 = OhemCELoss(thresh=score_thres, n_min=n_min)
