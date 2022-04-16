@@ -128,6 +128,7 @@ def train():
         loss2 = Loss2(out16, lb)
         loss3 = Loss3(out32, lb)
         loss = lossp + loss2 + loss3
+        print(loss)
         loss.backward()
         optim.step()
 
