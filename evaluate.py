@@ -3,7 +3,7 @@
 
 from logger import setup_logger
 from model import BiSeNet
-from face_dataset import FaceMask
+from hair_dataset import HairMask
 
 import torch
 import torch.nn as nn
@@ -22,17 +22,10 @@ from PIL import Image
 import torchvision.transforms as transforms
 import cv2
 
+
 def vis_parsing_maps(im, parsing_anno, stride, save_im=False, save_path='vis_results/parsing_map_on_im.jpg'):
-    # Colors for all 20 parts
-    part_colors = [[255, 0, 0], [255, 85, 0], [255, 170, 0],
-                   [255, 0, 85], [255, 0, 170],
-                   [0, 255, 0], [85, 255, 0], [170, 255, 0],
-                   [0, 255, 85], [0, 255, 170],
-                   [0, 0, 255], [85, 0, 255], [170, 0, 255],
-                   [0, 85, 255], [0, 170, 255],
-                   [255, 255, 0], [255, 255, 85], [255, 255, 170],
-                   [255, 0, 255], [255, 85, 255], [255, 170, 255],
-                   [0, 255, 255], [85, 255, 255], [170, 255, 255]]
+    # Colors for all 2 parts
+    part_colors = [[255, 0, 0], [170, 255, 255]]
 
     im = np.array(im)
     vis_im = im.copy().astype(np.uint8)
@@ -56,12 +49,12 @@ def vis_parsing_maps(im, parsing_anno, stride, save_im=False, save_path='vis_res
 
     # return vis_im
 
-def evaluate(respth='./res/test_res', dspth='./data', cp='model_final_diss.pth'):
 
+def evaluate(respth='./res/test_res', dspth='./data', cp='model_final_diss.pth'):
     if not os.path.exists(respth):
         os.makedirs(respth)
 
-    n_classes = 19
+    n_classes = 2
     net = BiSeNet(n_classes=n_classes)
     net.cuda()
     save_pth = osp.join('res/cp', cp)
@@ -81,13 +74,7 @@ def evaluate(respth='./res/test_res', dspth='./data', cp='model_final_diss.pth')
             img = img.cuda()
             out = net(img)[0]
             parsing = out.squeeze(0).cpu().numpy().argmax(0)
-
             vis_parsing_maps(image, parsing, stride=1, save_im=True, save_path=osp.join(respth, image_path))
-
-
-
-
-
 
 
 if __name__ == "__main__":
