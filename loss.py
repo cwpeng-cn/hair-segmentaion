@@ -12,7 +12,7 @@ class OhemCELoss(nn.Module):
         super(OhemCELoss, self).__init__()
         self.thresh = -torch.log(torch.tensor(thresh, dtype=torch.float)).cuda()
         self.n_min = n_min
-        self.criteria = nn.CrossEntropyLoss()
+        self.criteria = nn.CrossEntropyLoss(reduction='none')
 
     def forward(self, logits, labels):
         loss = self.criteria(logits, labels).view(-1)
