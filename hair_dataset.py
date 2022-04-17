@@ -24,7 +24,7 @@ class HairMask(Dataset):
                 brightness=0.5,
                 contrast=0.5,
                 saturation=0.5),
-            HorizontalFlip(),
+            # HorizontalFlip(),
             RandomScale((0.75, 1.0, 1.25, 1.5, 1.75, 2.0)),
             RandomCrop(crop_size)
         ])
@@ -53,8 +53,10 @@ class HairMask(Dataset):
             im_lb = dict(im=img, lb=label)
             im_lb = self.trans_train(im_lb)
             img, label = im_lb['im'], im_lb['lb']
+
         img = self.to_tensor(img)
-        label = np.array(label)[np.newaxis, :]
+        label = np.array(label)[np.newaxis, :].astype(np.int64)
+        label[label != 0] = 1
         return img, label
 
     def __len__(self):
