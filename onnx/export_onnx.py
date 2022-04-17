@@ -1,13 +1,12 @@
 import os
 import sys
 
+sys.path.append("..")
+
 import torch
-import sys
 import argparse
 from model import BiSeNet
 from torch.autograd import Variable
-
-sys.path.append("..")
 
 if __name__ == '__main__':
     # define cmd arguments
