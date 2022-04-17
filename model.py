@@ -114,7 +114,7 @@ class ContextPath(nn.Module):
         H32, W32 = feat32.size()[2:]
 
         # avg = F.avg_pool2d(feat32, feat32.size()[2:])
-        avg=self.pool(feat32)
+        avg = self.pool(feat32)
         avg = self.conv_avg(avg)
         avg_up = F.interpolate(avg, (H32, W32), mode='nearest')
 
@@ -208,7 +208,7 @@ class FeatureFusionModule(nn.Module):
         fcat = torch.cat([fsp, fcp], dim=1)
         feat = self.convblk(fcat)
         # atten = F.avg_pool2d(feat, feat.size()[2:])
-        atten=self.pool(feat)
+        atten = self.pool(feat)
         atten = self.conv1(atten)
         atten = self.relu(atten)
         atten = self.conv2(atten)
@@ -259,6 +259,9 @@ class BiSeNet(nn.Module):
         feat_out = F.interpolate(feat_out, (H, W), mode='bilinear', align_corners=True)
         feat_out16 = F.interpolate(feat_out16, (H, W), mode='bilinear', align_corners=True)
         feat_out32 = F.interpolate(feat_out32, (H, W), mode='bilinear', align_corners=True)
+        if not self.training:
+            data = torch.softmax(feat_out, axis=1)[:, 17, :, :]
+            return data
         return feat_out, feat_out16, feat_out32
 
     def init_weight(self):

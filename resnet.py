@@ -58,8 +58,7 @@ def create_layer_basic(in_chan, out_chan, bnum, stride=1):
 class Resnet18(nn.Module):
     def __init__(self):
         super(Resnet18, self).__init__()
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
-                               bias=False)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = create_layer_basic(64, 64, bnum=2, stride=1)
