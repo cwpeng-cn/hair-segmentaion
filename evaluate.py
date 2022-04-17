@@ -1,26 +1,15 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
 
-from logger import setup_logger
-from model import BiSeNet
-from hair_dataset import HairMask
-
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-import torch.nn.functional as F
-import torch.distributed as dist
-
 import os
-import os.path as osp
-import logging
-import time
-import numpy as np
-from tqdm import tqdm
-import math
-from PIL import Image
-import torchvision.transforms as transforms
 import cv2
+import torch
+import numpy as np
+import os.path as osp
+from PIL import Image
+from model import BiSeNet
+from logger import setup_logger
+import torchvision.transforms as transforms
 
 
 def vis_parsing_maps(im, parsing_anno, stride, save_im=False, save_path='vis_results/parsing_map_on_im.jpg'):
